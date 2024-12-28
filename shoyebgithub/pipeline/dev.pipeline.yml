@@ -1,0 +1,59 @@
+trigger: none
+pool: sikander
+stages:
+- stage: terraforminitandplan
+  displayName: Terraform init and plan
+  jobs:
+  - job: terraforminitandplan
+    displayName: Terraform init and plan
+    steps:
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/todo app module/Environment/Dev'
+        backendServiceArm: 'sikander'
+        backendAzureRmResourceGroupName: 'sikander-rg'
+        backendAzureRmStorageAccountName: 'sikanderstorage'
+        backendAzureRmContainerName: 'todoappcontainer'
+        backendAzureRmKey: 'todo.tfstatefile'
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/todo app module/Environment/Dev'
+        environmentServiceNameAzureRM: 'sikander'
+- stage: manualvalidation
+  displayName: manual validation
+  jobs:
+  - job: server
+    displayName: Manual validation
+    steps:
+    - task: ManualValidation@1
+      inputs:
+        notifyUsers: 'msk.bpl1@gmail.com'
+        allowApproversToApproveTheirOwnRuns: true
+        onTimeout: 'resume'
+
+- stage: terraforminitandapply
+  displayName: Terraform apply
+  dependsOn: terraforminitandplan
+  jobs:
+  - job: terraformapply
+    steps:
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)//todo app module/Environment/Dev'''
+        backendServiceArm: 'sikander'
+        backendAzureRmResourceGroupName: 'sikander-rg'
+        backendAzureRmStorageAccountName: 'sikanderstorage'
+        backendAzureRmContainerName: 'todoappcontainer'
+        backendAzureRmKey: 'todo.tfstatefile'
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/todo app module/Environment/Dev'
+        environmentServiceNameAzureRM: 'sikander'
